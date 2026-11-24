@@ -2,6 +2,7 @@ name = "nysprautun-bokun"
 main = "dist/worker.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
+routes = [{ pattern = "nysprautun.beisik.app", custom_domain = true }]
 
 [build]
 command = "npm run build"
