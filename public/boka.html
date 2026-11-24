@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bóka tíma – Nýsprautun</title>
+<style>
+  :root { --red: #c8102e; --ink: #16181d; --ink2: #4b5160; --line: #dfe2e8; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: transparent; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 32px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  p.lead { color: var(--ink2); margin: 0 0 22px; line-height: 1.5; }
+  form { display: grid; gap: 16px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+  label small { font-weight: 400; color: var(--ink2); }
+  input, select, textarea { font: inherit; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; width: 100%; color: var(--ink); }
+  input:focus, select:focus, textarea:focus { outline: 3px solid rgba(200,16,46,.18); border-color: var(--red); }
+  textarea { min-height: 100px; resize: vertical; }
+  .plate { text-transform: uppercase; font-family: ui-monospace, Menlo, monospace; font-weight: 700; letter-spacing: 1px; }
+  .parts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .parts label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 500; }
+  .parts input { width: auto; accent-color: var(--red); }
+  .parts label:has(input:checked) { border-color: var(--red); background: #fff5f6; }
+  button { font: inherit; font-weight: 700; background: var(--red); color: #fff; border: 0; border-radius: 8px; padding: 14px 20px; cursor: pointer; font-size: 16px; }
+  button:hover { background: #a00d25; }
+  button[disabled] { opacity: .6; cursor: default; }
+  .err { color: #b91c1c; font-size: 14px; }
+  .note { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+  .ok { text-align: center; padding: 40px 10px; }
+  .ok .tick { width: 64px; height: 64px; border-radius: 50%; background: #16a34a; color: #fff; display: grid; place-items: center; font-size: 34px; margin: 0 auto 16px; }
+  .hp { position: absolute; left: -9999px; }
+  @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="root">
+  <h1>Bóka tíma</h1>
+  <p class="lead">Sendu okkur beiðni um tíma og við höfum samband til að staðfesta. Tíminn er ekki bókaður fyrr en staðfesting hefur borist.</p>
+  <form id="f" novalidate>
+    <div class="two">
+      <label>Nafn <input name="name" required autocomplete="name"></label>
+      <label>Símanúmer <input name="phone" type="tel" required autocomplete="tel" inputmode="tel"></label>
+    </div>
+    <div class="two">
+      <label>Netfang <small>til að fá staðfestingu</small><input name="email" type="email" autocomplete="email"></label>
+      <label>Bílnúmer <input name="plate" class="plate" required maxlength="8" placeholder="AB123"></label>
+    </div>
+    <label>Hvað þarf að gera? <select name="service_id" id="svc"><option value="">— veldu —</option></select></label>
+    <div class="two">
+      <label>Óskadagur <input name="preferred_date" type="date" id="d1"></label>
+      <label>Varadagur <small>(valfrjálst)</small><input name="alt_date" type="date" id="d2"></label>
+    </div>
+    <div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:6px">Tími dags</div>
+      <div class="parts">
+        <label><input type="radio" name="preferred_part" value="any" checked> Skiptir ekki máli</label>
+        <label><input type="radio" name="preferred_part" value="morning"> Fyrir hádegi</label>
+        <label><input type="radio" name="preferred_part" value="afternoon"> Eftir hádegi</label>
+      </div>
+    </div>
+    <label>Lýsing / athugasemdir <small>t.d. hvar tjónið er, tryggingafélag o.s.frv.</small><textarea name="notes"></textarea></label>
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="err" id="err" role="alert"></div>
+    <button id="send" type="submit">Senda beiðni</button>
+    <div class="note" id="contact"></div>
+  </form>
+</div>
+<script>
+(async () => {
+  const f = document.getElementById('f'), err = document.getElementById('err');
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  let o;
+  try { o = await fetch('/api/public/options').then((r) => r.json()); } catch { err.textContent = 'Ekki tókst að hlaða síðunni. Reyndu aftur.'; return; }
+  if (!o.enabled) {
+    document.getElementById('root').innerHTML = `<h1>Netbókun lokuð</h1><p class="lead">Hafðu samband í síma ${o.shop.phone || ''}.</p>`;
+    return;
+  }
+  const svc = document.getElementById('svc');
+  for (const s of o.services) svc.add(new Option(s.name, s.id));
+  const now = new Date();
+  const min = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + o.minDays));
+  const max = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + o.maxDays));
+  for (const id of ['d1', 'd2']) { const el = document.getElementById(id); el.min = ymd(min); el.max = ymd(max); }
+  const closedWd = new Set(o.hours.filter((h) => h.closed).map((h) => h.weekday));
+  const isClosed = (s) => {
+    if (!s) return false;
+    const d = new Date(s + 'T00:00:00Z');
+    const wd = ((d.getUTCDay() + 6) % 7) + 1;
+    if (closedWd.has(wd)) return true;
+    return o.closures.some((c) => new Date(c.starts_at) <= d && new Date(c.ends_at) >= new Date(d.getTime() + 864e5));
+  };
+  if (o.shop.phone || o.shop.email) document.getElementById('contact').textContent = `Spurningar? Hringdu í ${o.shop.phone}${o.shop.email ? ' eða sendu póst á ' + o.shop.email : ''}.`;
+
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault(); err.textContent = '';
+    const data = Object.fromEntries(new FormData(f));
+    if (!data.name || !data.phone || !data.plate) { err.textContent = 'Fylltu út nafn, símanúmer og bílnúmer.'; return; }
+    for (const k of ['preferred_date', 'alt_date']) {
+      if (data[k] && (data[k] < ymd(min) || data[k] > ymd(max))) { err.textContent = `Veldu dag á bilinu ${ymd(min)} til ${ymd(max)}.`; return; }
+      if (isClosed(data[k])) { err.textContent = 'Það er lokað þann dag sem þú valdir. Veldu annan dag.'; return; }
+    }
+    const btn = document.getElementById('send'); btn.disabled = true; btn.textContent = 'Sendi…';
+    try {
+      const r = await fetch('/api/public/request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Villa');
+      document.getElementById('root').innerHTML = `<div class="ok"><div class="tick">✓</div><h1>Takk fyrir!</h1><p class="lead">Beiðnin þín er móttekin. Við höfum samband fljótlega til að staðfesta tímann${data.email ? ', og staðfesting á móttöku hefur verið send á netfangið þitt' : ''}.</p></div>`;
+      parent?.postMessage?.({ type: 'nysprautun-booking-sent' }, '*');
+    } catch (ex) {
+      err.textContent = ex.message; btn.disabled = false; btn.textContent = 'Senda beiðni';
+    }
+  });
+})();
+</script>
+</body>
+</html>

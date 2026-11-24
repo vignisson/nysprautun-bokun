@@ -1,0 +1,17 @@
+name = "nysprautun-bokun"
+main = "dist/worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Áminningar, gulir miðar og Outlook-samstilling á 5 mín fresti
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+SUPABASE_URL = ""          # https://<ref>.supabase.co
+SUPABASE_ANON_KEY = ""     # publishable / anon lykill
+MAIL_FROM = "Nýsprautun <timabokanir@nysprautun.is>"
+
+# Leyndarmál (wrangler secret put …):
+# SUPABASE_SERVICE_KEY, TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM (eða TWILIO_MESSAGING_SERVICE_SID),
+# RESEND_API_KEY, MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET
