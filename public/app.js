@@ -262,6 +262,9 @@ function renderTop() {
       h('button', { class: 'btn', onclick: () => { S.date = today(); reload(); } }, 'Í dag'),
       h('button', { class: 'btn', title: 'Næsta', onclick: () => step(1) }, '›')),
     dateInp,
+    !(S.view === 'lift' && S.range === 'month') ? h('div', { class: 'seg zoom', title: 'Stærð tímaáss' },
+      h('button', { title: 'Minnka tímaás', 'aria-label': 'Minnka tímaás', onclick: () => zoom(0.8) }, '−'),
+      h('button', { title: 'Stækka tímaás', 'aria-label': 'Stækka tímaás', onclick: () => zoom(1.25) }, '+')) : null,
     h('div', { class: 'title' }, title()),
     h('div', { class: 'grow' }),
     searchBox(),
@@ -282,8 +285,6 @@ function userMenu() {
     h('div', { class: 'muted', style: { padding: '6px 10px', fontSize: '12px' } }, S.me.name || S.me.email),
     S.me.role === 'admin' ? h('button', { onclick: () => { close(); openSettings(); } }, 'Stillingar') : null,
     S.outlook ? h('button', { onclick: async () => { close(); await syncNow(); } }, 'Samstilla Outlook núna') : null,
-    h('button', { onclick: () => { close(); zoom(1.25); } }, 'Stækka tímaás'),
-    h('button', { onclick: () => { close(); zoom(0.8); } }, 'Minnka tímaás'),
     h('button', { onclick: () => { close(); window.print(); } }, 'Prenta'),
     h('button', { onclick: () => S.sb.auth.signOut() }, 'Skrá út'));
   const close = () => (dd.style.display = 'none');

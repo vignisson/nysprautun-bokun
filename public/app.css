@@ -41,6 +41,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid rgba(200,16,46,.2
 .seg button { border: 0; background: transparent; padding: 7px 11px; font-weight: 600; color: var(--ink2); border-right: 1px solid var(--line); }
 .seg button:last-child { border-right: 0; }
 .seg button.on { background: var(--ink); color: #fff; }
+.seg.zoom button { font-size: 18px; line-height: 1; padding: 5px 12px; color: var(--ink); min-width: 38px; }
+.seg.zoom button:hover { background: var(--line2); }
 .row { display: flex; gap: 10px; align-items: center; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
