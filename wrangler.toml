@@ -1,5 +1,8 @@
 name = "nysprautun-bokun"
 main = "dist/worker.js"
+
+[build]
+command = "npm run build"
 compatibility_date = "2026-10-01"
 workers_dev = true
 
@@ -8,8 +11,8 @@ workers_dev = true
 crons = ["*/5 * * * *"]
 
 [vars]
-SUPABASE_URL = ""          # https://<ref>.supabase.co
-SUPABASE_ANON_KEY = ""     # publishable / anon lykill
+SUPABASE_URL = "https://shthchjdiojwwemrtrho.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNodGhjaGpkaW9qd3dlbXJ0cmhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1MzA5NjAsImV4cCI6MjExMTEwNjk2MH0.bip4NRv4pJmFEy-oM4d2JeW2VdfMjYJtdbW5iwUCOdg"  # opinber lykill (RLS ver gögnin)
 MAIL_FROM = "Nýsprautun <timabokanir@nysprautun.is>"
 
 # Leyndarmál (wrangler secret put …):
